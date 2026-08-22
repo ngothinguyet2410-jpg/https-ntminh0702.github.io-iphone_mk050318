@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iPhone 17 Pro Simulator - Tuấn</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; user-select: none; }
+        body { background: #1c1c1e; display: flex; justify-content: center; align-items: center; min-height: 100vh; color: #fff; }
+        
+        /* Điện thoại */
+        .iphone { width: 393px; height: 852px; background: #000; border-radius: 55px; border: 12px solid #3a3a3c; position: relative; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; }
+        
+        /* Dynamic Island */
+        .dynamic-island { width: 110px; height: 30px; background: #000; border-radius: 20px; position: absolute; top: 15px; left: 50%; transform: translateX(-50%); z-index: 1000; transition: all 0.3s ease; }
+        
+        /* Thanh trạng thái */
+        .status-bar { height: 44px; padding: 0 32px 0 32px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; position: absolute; top: 0; width: 100%; z-index: 999; }
+        .status-right { display: flex; gap: 5px; align-items: center; }
+        
+        /* Hình nền hệ thống */
+        .screen { flex: 1; width: 100%; height: 100%; position: relative; background: linear-gradient(135deg, #1d2671, #c33764); display: none; }
+        .screen.active { display: block; }
+        
+        /* MÀN HÌNH KHÓA (LOCK SCREEN) */
+        #lock-screen { background: linear-gradient(180deg, #2b3a4a 0%, #12171e 100%); padding-top: 60px; text-align: center; }
+        .lock-time { font-size: 72px; font-weight: 200; margin-top: 10px; letter-spacing: -1px; }
+        .lock-date { font-size: 19px; font-weight: 400; opacity: 0.9; }
+        .lock-weather-widget { background: rgba(255,255,255,0.1); margin: 20px 25px; padding: 15px; border-radius: 22px; backdrop-filter: blur(20px); text-align: left; position: relative; }
+        .widget-header { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; opacity: 0.8; }
+        .widget-temp-row { display: flex; align-items: center; margin-top: 8px; }
+        .widget-temp { font-size: 36px; font-weight: 300; margin-right: 10px; }
+        .widget-desc { font-size: 13px; margin-top: 4px; opacity: 0.8; }
+        .lock-hint { position: absolute; bottom: 80px; width: 100%; left: 0; text-align: center; font-size: 15px; font-weight: 500; animation: pulse 2s infinite; cursor: pointer; }
+        
+        /* MÀN HÌNH NHẬP MẬT MÃ */
+        #passcode-screen { background: rgba(0,0,0,0.85); backdrop-filter: blur(25px); padding-top: 120px; text-align: center; }
+        .passcode-title { font-size: 18px; font-weight: 400; margin-bottom: 25px; }
+        .dots-container { display: flex; justify-content: center; gap: 15px; margin-bottom: 60px; height: 12px; }
+        .dot { width: 12px; height: 12px; border: 1.5px solid #fff; border-radius: 50%; transition: background 0.1s ease; }
+        .dot.filled { background: #fff; }
+        .keypad { display: grid; grid-template-columns: repeat(3, 75px); gap: 15px 25px; justify-content: center; }
+        .key { width: 75px; height: 75px; background: rgba(255,255,255,0.12); border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: background 0.1s; }
+        .key:active { background: rgba(255,255,255,0.3); }
+        .key-num { font-size: 28px; font-weight: 400; }
+        .key-abc { font-size: 9px; font-weight: 600; letter-spacing: 1px; opacity: 0.6; text-transform: uppercase; margin-top: -2px; }
+        .keypad-footer { display: flex; justify-content: space-between; width: 240px; margin: 30px auto 0; font-size: 14px; padding: 0 10px; opacity: 0.9; }
+        .footer-btn { cursor: pointer; }
+        
+        /* MÀN HÌNH CHÍNH (HOME SCREEN) */
+        #home-screen { padding: 60px 20px 20px; background: linear-gradient(180deg, #3a4750 0%, #1a2026 100%); }
+        .grid-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px 16px; justify-items: center; padding-top: 10px; }
+        
+        /* Widget lớn trên màn hình chính */
+        .home-weather-large { grid-column: span 4; width: 100%; background: linear-gradient(180deg, #517fa4 0%, #243949 100%); border-radius: 24px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; height: 150px; cursor: pointer; }
+        .wl-top { display: flex; justify-content: space-between; }
+        .wl-city { font-size: 17px; font-weight: 600; }
+        .wl-temp { font-size: 40px; font-weight: 200; line-height: 1; }
+        .wl-cond { font-size: 13px; font-weight: 500; margin-top: 2px; }
+        .wl-hl { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+        .wl-hourly { display: flex; justify-content: space-between; margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 8px; }
+        .wl-h-item { text-align: center; font-size: 12px; }
+        .wl-h-time { opacity: 0.7; margin-bottom: 2px; }
+        .wl-h-temp { font-weight: 600; }
+        
+        /* Icon ứng dụng */
+        .app-icon-wrapper { display: flex; flex-direction: column; align-items: center; width: 68px; cursor: pointer; }
+        .app-icon { width: 60px; height: 60px; border-radius: 14px; display: flex; justify-content: center; align-items: center; font-size: 30px; margin-bottom: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: transform 0.1s; }
+        .app-icon-wrapper:active .app-icon { transform: scale(0.9); }
+        .app-label { font-size: 11px; font-weight: 500; text-align: center; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.95; }
+        
+        /* Màu sắc & background Icon cụ thể */
+        .icon-phone { background: #34c759; }
+        .icon-google { background: #fff; color: #000; font-size: 26px; font-weight: bold; }
+        .icon-maps { background: #fff; }
+        .icon-weather { background: linear-gradient(180deg, #5ac8fa, #007aff); }
+        .icon-settings { background: #8e8e93; }
+        .icon-camera { background: #2c2c2e; border: 1px solid #3a3a3c; }
+        .icon-photos { background: #fff; }
+        .icon-messages { background: #34c759; }
+        
+        /* ỨNG DỤNG LỚP PHỦ (FULLSCREEN APPS) */
+        .app-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; display: none; flex-direction: column; background: #000; padding-top: 44px; }
+        .app-overlay.active { display: flex; }
+        .app-header { height: 44px; display: flex; align-items: center; padding: 0 16px; border-bottom: 1px solid #222; background: #1c1c1e; }
+        .back-btn { font-size: 16px; color: #0a84ff; cursor: pointer; display: flex; align-items: center; gap: 5px; font-weight: 400; }
+        .app-title { flex: 1; text-align: center; font-weight: 600; font-size: 17px; margin-right: 50px; }
+        .app-body { flex: 1; overflow-y: auto; background: #1c1c1e; }
+        
+        /* GIAO DIỆN CAMERA */
+        #camera-app { background: #000; }
+        #camera-app .app-header { background: #000; border-bottom: none; }
+        #camera-app .back-btn { color: #fff; }
+        .camera-view-container { width: 100%; height: 480px; background: #111; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        #camera-video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: none; }
+        .camera-fallback { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; position: absolute; background: linear-gradient(45deg, #111, #222); font-size: 14px; color: #aaa; text-align: center; padding: 20px; }
+        .camera-canvas-sim { width: 100%; height: 100%; }
+        .flash-effect { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 10; opacity: 0; pointer-events: none; }
+        .camera-controls { height: 140px; background: #000; display: flex; justify-content: space-around; align-items: center; padding: 0 30px; }
+        .cam-btn-thumb { width: 45px; height: 45px; border-radius: 8px; border: 2px solid #fff; overflow: hidden; background: #222; cursor: pointer; background-size: cover; background-position: center; }
+        .cam-btn-shutter { width: 72px; height: 72px; border-radius: 50%; background: #fff; border: 4px solid #000; box-shadow: 0 0 0 2px #fff; cursor: pointer; }
+        .cam-btn-shutter:active { transform: scale(0.92); }
+        .cam-btn-flip { width: 45px; height: 45px; border-radius: 50%; background: #222; display: flex; justify-content: center; align-items: center; font-size: 20px; cursor: pointer; }
+        
+        /* GIAO DIỆN ẢNH (PHOTOS) */
+        .photos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; }
+        .photo-item { aspect-ratio: 1; background-size: cover; background-position: center; cursor: pointer; position: relative; border-radius: 2px; }
+        .no-photos { text-align: center; padding: 60px 20px; color: #8e8e93; font-size: 16px; }
+        
+        /* Lightbox phóng to ảnh */
+        .lightbox { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 200; display: none; flex-direction: column; padding-top: 44px; }
+        .lightbox.active { display: flex; }
+        .lightbox-img { flex: 1; background-size: contain; background-position: center; background-repeat: no-repeat; }
+        .lightbox-footer { height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; background: rgba(20,20,20,0.9); }
+        .lightbox-btn { color: #0a84ff; font-size: 16px; cursor: pointer; font-weight: 500; }
+        .lightbox-btn.danger { color: #ff3b30; }
+        
+        /* GIAO DIỆN CÀI ĐẶT */
+        .settings-list { background: #1c1c1e; margin-top: 15px; }
+        .settings-item { display: flex; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #2c2c2e; font-size: 16px; }
+        .settings-label { color: #fff; }
+        .settings-val { color: #8e8e93; font-size: 15px; }
+        .settings-sync-box { margin: 30px 16px; padding: 16px; background: rgba(255,159,10,0.15); border: 1px solid rgba(255,159,10,0.3); border-radius: 12px; display: flex; gap: 12px; align-items: flex-start; }
+        .sync-icon { font-size: 22px; }
+        .sync-text { font-size: 13px; color: #ff9f0a; line-height: 1.4; font-weight: 500; }
+        
+        /* GIAO DIỆN CHUNG CHO APP KHÁC */
+        .placeholder-app-body { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 80%; text-align: center; color: #8e8e93; padding: 20px; }
+        .placeholder-icon { font-size: 50px; margin-bottom: 15px; }
+        
+        /* Home Bar dưới đáy */
+        .home-bar { width: 140px; height: 5px; background: #fff; border-radius: 3px; position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); z-index: 1001; cursor: pointer; }
+        
+        @keyframes pulse {
+            0% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.02); }
+            100% { opacity: 0.4; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="iphone">
+        <!-- Dynamic Island -->
+        <div class="dynamic-island" id="island"></div>
+        
+        <!-- Thanh trạng thái -->
+        <div class="status-bar">
+            <span id="status-time">08:59</span>
+            <div class="status-right">
+                <span>📶</span>
+                <span>🛜</span>
+                <span>🔋</span>
+            </div>
+        </div>
+
+        <!-- MÀN HÌNH KHÓA -->
+        <div class="screen active" id="lock-screen">
+            <div class="lock-date" id="lock-date">Thứ Tư, 19 tháng 8</div>
+            <div class="lock-time" id="lock-screen-time">08:59</div>
+            
+            <!-- Widget thời tiết Mậu Lâm -->
+            <div class="lock-weather-widget" onclick="openWeatherFromLock()">
+                <div class="widget-header">
+                    <span>Mậu Lâm</span>
+                    <span>🌧 Mưa lớn diện rộng</span>
+                </div>
+                <div class="widget-temp-row">
+                    <span class="widget-temp">26°</span>
+                    <div>
+                        <div style="font-size: 12px; opacity: 0.8;">C: 28° Th: 24°</div>
+                        <div style="font-size: 11px; opacity: 0.6; margin-top: 1px;">Dự báo hôm nay</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="lock-hint" onclick="goToPasscode()">🔒 Nhấp hoặc vuốt lên để mở khóa</div>
+        </div>
+
+        <!-- MÀN HÌNH NHẬP MẬT MÃ -->
+        <div class="screen" id="passcode-screen">
+            <div class="passcode-title">Nhập mật mã</div>
+            <div class="dots-container" id="dots-container">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+            
+            <div class="keypad">
+                <div class="key" onclick="pressKey('1')"><span class="key-num">1</span><span class="key-abc">&nbsp;</span></div>
+                <div class="key" onclick="pressKey('2')"><span class="key-num">2</span><span class="key-abc">abc</span></div>
+                <div class="key" onclick="pressKey('3')"><span class="key-num">3</span><span class="key-abc">def</span></div>
+                <div class="key" onclick="pressKey('4')"><span class="key-num">4</span><span class="key-abc">ghi</span></div>
+                <div class="key" onclick="pressKey('5')"><span class="key-num">5</span><span class="key-abc">jkl</span></div>
+                <div class="key" onclick="pressKey('6')"><span class="key-num">6</span><span class="key-abc">mno</span></div>
+                <div class="key" onclick="pressKey('7')"><span class="key-num">7</span><span class="key-abc">pqrs</span></div>
+                <div class="key" onclick="pressKey('8')"><span class="key-num">8</span><span class="key-abc">tuv</span></div>
+                <div class="key" onclick="pressKey('9')"><span class="key-num">9</span><span class="key-abc">wxyz</span></div>
+                <div></div>
+                <div class="key" onclick="pressKey('0')"><span class="key-num">0</span><span class="key-abc">&nbsp;</span></div>
+                <div></div>
+            </div>
+            
+            <div class="keypad-footer">
+                <span class="footer-btn" onclick="cancelPasscode()">Hủy</span>
+                <span class="footer-btn" onclick="clearPasscode()">Xóa</span>
+            </div>
+        </div>
+
+        <!-- MÀN HÌNH CHÍNH -->
+        <div class="screen" id="home-screen">
+            <div class="grid-container">
+                
+                <!-- Weather Widget Tuấn -->
+                <div class="home-weather-large" onclick="openApp('weather')">
+                    <div class="wl-top">
+                        <div>
+                            <div class="wl-city">Xã Mậu Lâm</div>
+                            <div class="wl-temp">26°</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div class="wl-cond">🌧 Mưa lớn</div>
+                            <div class="wl-hl">C:28° Th:24°</div>
+                        </div>
+                    </div>
+                    <div class="wl-hourly">
+                        <div class="wl-h-item"><div class="wl-h-time">B.giờ</div><div>🌧</div><div class="wl-h-temp">26°</div></div>
+                        <div class="wl-h-item"><div class="wl-h-time">10:00</div><div>🌧</div><div class="wl-h-temp">26°</div></div>
+                        <div class="wl-h-item"><div class="wl-h-time">11:00</div><div>🌧</div><div class="wl-h-temp">26°</div></div>
+                        <div class="wl-h-item"><div class="wl-h-time">12:00</div><div>🌦</div><div class="wl-h-temp">28°</div></div>
+                    </div>
+                </div>
+                
+                <!-- Hàng ứng dụng 1 -->
+                <div class="app-icon-wrapper" onclick="openApp('phone')">
+                    <div class="app-icon icon-phone">📞</div>
+                    <div class="app-label">Điện thoại</div>
+                </div>
+                
+                <div class="app-icon-wrapper" onclick="openApp('google')">
+                    <div class="app-icon icon-google">G</div>
+                    <div class="app-label">Google</div>
+                </div>
+                
+                <div class="app-icon-wrapper" onclick="openApp('maps')">
+                    <div class="app-icon icon-maps">🗺️</div>
+                    <div class="app-label">Bản đồ</div>
+                </div>
+                
+                <div class="app-icon-wrapper" onclick="openApp('weather')">
+                    <div class="app-icon icon-weather">🌧️</div>
+                    <div class="app-label">Thời tiết</div>
+                </div>
+
+                <!-- Hàng ứng dụng 2 -->
+                <div class="app-icon-wrapper" onclick="openApp('settings')">
+                    <div class="app-icon icon-settings">⚙️</div>
+                    <div class="app-label">Cài đặt</div>
+                </div>
+                
+                <div class="app-icon-wrapper" onclick="openApp('camera')">
+                    <div class="app-icon icon-camera">📷</div>
+                    <div class="app-label">Camera</div>
+                </div>
+                
+                <div class="app-icon-wrapper" onclick="openApp('photos')">
+                    <div class="app-icon icon-photos">🖼️</div>
+                    <div class="app-label">Ảnh</div>
+                </div>
+                
+                <div class="app-icon-wrapper" onclick="openApp('messages')">
+                    <div class="app-icon icon-messages">💬</div>
+                    <div class="app-label">Tin nhắn</div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- APP: THỜI TIẾT CHI TIẾT -->
+        <div class="app-overlay" id="app-weather">
+            <div class="app-header">
+                <span class="back-btn" onclick="closeApp()">←</span>
+                <span class="app-title">Thời tiết</span>
+            </div>
+            <div class="app-body" style="background: linear-gradient(180deg, #3a7bd5, #3a6073); padding: 30px 20px; text-align: center;">
+                <h2 style="font-size: 28px; font-weight: 500;">Xã Mậu Lâm</h2>
+                <div style="font-size: 75px; font-weight: 200; margin: 10px 0;">26°</div>
+                <p style="font-size: 18px; opacity: 0.9;">Mưa lớn diện rộng</p>
+                <p style="font-size: 14px; opacity: 0.7; margin-top: 5px;">Cao nhất: 28° Thấp nhất: 24°</p>
+                
+                <div style="margin-top: 40px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 16px; text-align: left;">
+                    <p style="font-size: 13px; font-weight: 600; opacity: 0.7; text-transform: uppercase; margin-bottom: 10px;">Dự báo theo giờ</p>
+                    <div style="display: flex; justify-content: space-between;">
+                        <div style="text-align:center"><p style="opacity:0.7">Bây giờ</p><p style="margin:5px 0">🌧</p><p style="font-weight:600">26°</p></div>
+                        <div style="text-align:center"><p style="opacity:0.7">10:00</p><p style="margin:5px 0">🌧</p><p style="font-weight:600">26°</p></div>
+                        <div style="text-align:center"><p style="opacity:0.7">11:00</p><p style="margin:5px 0">🌧</p><p style="font-weight:600">26°</p></div>
+                        <div style="text-align:center"><p style="opacity:0.7">12:00</p><p style="margin:5px 0">🌦</p><p style="font-weight:600">28°</p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- APP: CÀI ĐẶT -->
+        <div class="app-overlay" id="app-settings">
+            <div class="app-header">
+                <span class="back-btn" onclick="closeApp()">←</span>
+                <span class="app-title">Cài đặt chung</span>
+            </div>
+            <div class="app-body">
+                <div class="settings-list">
+                    <div class="settings-item">
+                        <span class="settings-label">Tên thiết bị</span>
+                        <span class="settings-val">iPhone 17 Pro</span>
+                    </div>
+                    <div class="settings-item">
+                        <span class="settings-label">Phiên bản iOS</span>
+                        <span class="settings-val">26.0 (Giả lập)</span>
+                    </div>
+                    <div class="settings-item">
+                        <span class="settings-label">Khóa bảo mật</span>
+                        <span class="settings-val">Đã bật (030518)</span>
+                    </div>
+                </div>
+                <div class="settings-sync-box">
+                    <span class="sync-icon">🚧</span>
+                    <span class="sync-text">Ứng dụng này đang được đồng bộ dữ liệu bảo mật từ iCloud.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- APP: CAMERA HOẠT ĐỘNG THỰC TẾ -->
+        <div class="app-overlay" id="app-camera">
+            <div class="app-header">
+                <span class="back-btn" onclick="closeApp()">← Đóng</span>
+                <span class="app-title" style="margin-right:0; color:#fff;">CAMERA</span>
+            </div>
+            <div class="app-body" style="background:#000; overflow:hidden; display:flex; flex-direction:column; justify-content:space-between;">
+                <div class="camera-view-container">
+                    <video id="camera-video" autoplay playsinline></video>
+                    <div class="camera-fallback" id="camera-fallback">
+                        <span>Đang kết nối luồng máy ảnh...<br><span style="font-size:12px; opacity:0.6;">(Hãy đồng ý cấp quyền webcam nếu được hỏi)</span></span>
+                    </div>
+                    <canvas id="sim-canvas" class="camera-canvas-sim" style="display:none;"></canvas>
+                    <div class="flash-effect" id="flash"></div>
+                </div>
+                
+                <div class="camera-controls">
+                    <div class="cam-btn-thumb" id="cam-thumb" onclick="switchToPhotosApp()"></div>
+                    <div class="cam-btn-shutter" onclick="takePhoto()"></div>
+                    <div class="cam-btn-flip" onclick="toggleFallbackMode()">🔄</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- APP: ẢNH (PHOTOS) -->
+        <div class="app-overlay" id="app-photos">
+            <div class="app-header">
+                <span class="back-btn" onclick="closeApp()">←</span>
+                <span class="app-title">Thư viện Ảnh</span>
+            </div>
+            <div class="app-body">
+                <div id="photos-container" class="photos-grid"></div>
+            </div>
+            
+            <!-- Lightbox Xem chi tiết Ảnh -->
+            <div class="lightbox" id="lightbox">
+                <div class="app-header" style="background:#000; border-bottom:none;">
+                    <span class="back-btn" onclick="closeLightbox()" style="color:#fff;">← Trở lại</span>
+                </div>
+                <div class="lightbox-img" id="lightbox-img"></div>
+                <div class="lightbox-footer">
+                    <span class="lightbox-btn" onclick="closeLightbox()">Xong</span>
+                    <span class="lightbox-btn danger" onclick="deleteCurrentPhoto()">Xóa ảnh</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- CACH APP KHÁC (GIỮ NGUYÊN) -->
+        <div class="app-overlay" id="app-phone">
+            <div class="app-header"><span class="back-btn" onclick="closeApp()">←</span><span class="app-title">Điện thoại</span></div>
+            <div class="app-body"><div class="placeholder-app-body"><div class="placeholder-icon">📞</div><p>Ứng dụng Điện thoại đang chờ kết nối...</p></div></div>
+        </div>
+        <div class="app-overlay" id="app-google">
+            <div class="app-header"><span class="back-btn" onclick="closeApp()">←</span><span class="app-title">Google</span></div>
+            <div class="app-body"><div class="placeholder-app-body"><div class="placeholder-icon">🔍</div><p>Tìm kiếm thông tin an toàn cùng Google</p></div></div>
+        </div>
+        <div class="app-overlay" id="app-maps">
+            <div class="app-header"><span class="back-btn" onclick="closeApp()">←</span><span class="app-title">Bản đồ</span></div>
+            <div class="app-body"><div class="placeholder-app-body"><div class="placeholder-icon">🗺️</div><p>Bản đồ vệ tinh khu vực xã Mậu Lâm</p></div></div>
+        </div>
+        <div class="app-overlay" id="app-messages">
+            <div class="app-header"><span class="back-btn" onclick="closeApp()">←</span><span class="app-title">Tin nhắn</span></div>
+            <div class="app-body"><div class="placeholder-app-body"><div class="placeholder-icon">💬</div><p>Hộp thư đến trống</p></div></div>
+        </div>
+
+        <!-- Thanh vuốt Home Bar -->
+        <div class="home-bar" onclick="handleHomeBar()"></div>
+    </div>
+
+    <script>
+        // Cấu hình mã pin cố định
+        const TARGET_PIN = "030518";
+        let currentInputPin = "";
+        let photos = JSON.parse(localStorage.getItem("tuan_iphone_photos")) || [];
+        let videoStream = null;
+        let isFallbackMode = false;
+        let selectedPhotoIndex = null;
+
+        // Cập nhật thời gian thực tế liên tục
+        function updateTime() {
+            const now = new Date();
+            let hours = now.getHours().toString().padStart(2, '0');
+            let minutes = now.getMinutes().toString().padStart(2, '0');
+            const timeStr = hours + ":" + minutes;
+            
+            document.getElementById("status-time").innerText = timeStr;
+            document.getElementById("lock-screen-time").innerText = timeStr;
+            
+            const days = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
+            const dayName = days[now.getDay()];
+            document.getElementById("lock-date").innerText = dayName + ", " + now.getDate() + " tháng " + (now.getMonth() + 1);
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Mở màn hình khóa vào màn nhập mã
+        function goToPasscode() {
+            document.getElementById("lock-screen").classList.remove("active");
+            document.getElementById("passcode-screen").classList.add("active");
+            clearPasscode();
+        }
+
+        function cancelPasscode() {
+            document.getElementById("passcode-screen").classList.remove("active");
+            document.getElementById("lock-screen").classList.add("active");
+        }
+
+        // Xử lý bấm nút số mật khẩu
+        function pressKey(num) {
+            if (currentInputPin.length < 6) {
+                currentInputPin += num;
+                updatePinDots();
+                
+                if (currentInputPin.length === 6) {
+                    setTimeout(() => {
+                        if (currentInputPin === TARGET_PIN) {
+                            // Đúng mật khẩu -> Vào Home
+                            document.getElementById("passcode-screen").classList.remove("active");
+                            document.getElementById("home-screen").classList.add("active");
+                        } else {
+                            // Sai mật khẩu -> Rung lắc và xóa sạch
+                            alert("Mật mã bảo mật không đúng! Vui lòng nhập lại.");
+                            clearPasscode();
+                        }
+                    }, 150);
+                }
+            }
+        }
+
+        function updatePinDots() {
+            const dots = document.querySelectorAll("#dots-container .dot");
+            dots.forEach((dot, index) => {
+                if (index < currentInputPin.length) {
+                    dot.classList.add("filled");
+                } else {
+                    dot.classList.remove("filled");
+                }
+            });
+        }
+
+        function clearPasscode() {
+            currentInputPin = "";
+            updatePinDots();
+        }
+
+        // Điều hướng app overlay
+        function openApp(appId) {
+            document.getElementById("app-" + appId).classList.add("active");
+            if (appId === 'camera') {
+                startCamera();
+            }
+            if (appId === 'photos') {
+                renderPhotosGrid();
+            }
+        }
+
+        function closeApp() {
+            const activeApp = document.querySelector(".app-overlay.active");
+            if (activeApp) {
+                activeApp.classList.remove("active");
+                if (activeApp.id === 'app-camera') {
+                    stopCamera();
+                }
+            }
+        }
+
+        function openWeatherFromLock() {
+            // Cho phép xem nhanh thời tiết từ màn hình khóa, sau khi đóng sẽ quay lại khóa
+            openApp('weather');
+        }
+
+        function handleHomeBar() {
+            // Nhấn thanh dưới đáy quay về màn hình chính (nếu đã mở khóa)
+            if (document.getElementById("home-screen").classList.contains("active")) {
+                closeApp();
+            }
+        }
+
+        // QUẢN LÝ CAMERA THỰC TẾ & MÔ PHỎNG
+        async function startCamera() {
+            const video = document.getElementById("camera-video");
+            const fallback = document.getElementById("camera-fallback");
+            const canvas = document.getElementById("sim-canvas");
+            
+            updateCameraThumb();
+            
+            if (isFallbackMode) {
+                runCanvasSimulation();
+                return;
+            }
+
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "user", width: 480, height: 480 },
+                    audio: false
+                });
+                video.srcObject = videoStream;
+                video.style.display = "block";
+                canvas.style.display = "none";
+                fallback.style.display = "none";
+            } catch (err) {
+                console.log("Không truy cập được camera thực, chuyển sang chế độ mô phỏng.");
+                isFallbackMode = true;
+                runCanvasSimulation();
+            }
+        }
+
+        function stopCamera() {
+            const video = document.getElementById("camera-video");
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            }
+            video.srcObject = null;
+            video.style.display = "none";
+        }
+
+        function toggleFallbackMode() {
+            isFallbackMode = !isFallbackMode;
+            stopCamera();
+            startCamera();
+        }
+
+        // Tạo ảnh nghệ thuật ngẫu nhiên khi không có camera thực
+        let simInterval = null;
+        function runCanvasSimulation() {
+            const video = document.getElementById("camera-video");
+            const fallback = document.getElementById("camera-fallback");
+            const canvas = document.getElementById("sim-canvas");
+            video.style.display = "none";
+            fallback.style.display = "none";
+            canvas.style.display = "block";
+            
+            const ctx = canvas.getContext("2d");
+            canvas.width = 393;
+            canvas.height = 480;
+
+            if (simInterval) clearInterval(simInterval);
+            
+            // Vẽ hoạt họa trừu tượng nghệ thuật
+            let hue = Math.random() * 360;
+            simInterval = setInterval(() => {
+                if (!canvas.offsetParent) { 
+                    clearInterval(simInterval);
+                    return;
+                }
+                ctx.fillStyle = `hsl(${hue}, 70%, 15%)`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Vẽ các vòng tròn nghệ thuật chuyển động sáng lấp lánh
+                for (let i = 0; i < 15; i++) {
+                    let x = Math.sin(Date.now() * 0.001 + i) * 100 + canvas.width/2;
+                    let y = Math.cos(Date.now() * 0.0015 + i * 2) * 120 + canvas.height/2;
+                    let radius = Math.abs(Math.sin(Date.now() * 0.002 + i)) * 40 + 10;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `aria-hidden HSL(${(hue + i * 25) % 360}, 80%, 50%, 0.3)`;
+                    ctx.fill();
+                }
+                
+                ctx.fillStyle = "#fff";
+                ctx.font = "14px -apple-system";
+                ctx.textAlign = "center";
+                ctx.fillText("Chế độ Mô phỏng Nghệ thuật iPhone 17 Pro", canvas.width / 2, canvas.height - 30);
+            }, 40);
+        }
+
+        // Hành động bấm nút chụp ảnh
+        function takePhoto() {
+            const flash = document.getElementById("flash");
+            // Hiệu ứng flash nháy sáng trắng của camera
+            flash.style.opacity = "1";
+            setTimeout(() => flash.style.opacity = "0", 150);
+
+            const captureCanvas = document.createElement("canvas");
+            captureCanvas.width = 400;
+            captureCanvas.height = 400;
+            const ctx = captureCanvas.getContext("2d");
+
+            if (!isFallbackMode && videoStream) {
+                // Chụp từ video thực tế của webcam
+                const video = document.getElementById("camera-video");
+                // Lật ngược hình ảnh lại cho đúng góc nhìn chính diện
+                ctx.translate(400, 0);
+                ctx.scale(-1, 1);
+                ctx.drawImage(video, 0, 0, 400, 400);
+            } else {
+                // Lưu từ màn hình canvas mô phỏng nghệ thuật
+                const simCanvas = document.getElementById("sim-canvas");
+                ctx.drawImage(simCanvas, 0, 40, 393, 393, 0, 0, 400, 400);
+                // Thêm nhãn đóng dấu phong cách ảnh chụp
+                ctx.fillStyle = "rgba(255,255,255,0.7)";
+                ctx.font = "bold 14px sans-serif";
+                ctx.fillText("iPhone 17 Pro · Tuấn", 20, 370);
+            }
+
+            const imgDataUrl = captureCanvas.toDataURL("image/jpeg", 0.85);
+            photos.unshift(imgDataUrl); // Ảnh mới lên đầu danh sách
+            localStorage.setItem("tuan_iphone_photos", JSON.stringify(photos));
+            
+            updateCameraThumb();
+        }
+
+        function updateCameraThumb() {
+            const thumb = document.getElementById("cam-thumb");
+            if (photos.length > 0) {
+                thumb.style.backgroundImage = `url(${photos[0]})`;
+            } else {
+                thumb.style.backgroundImage = "none";
+            }
+        }
+
+        function switchToPhotosApp() {
+            closeApp();
+            openApp('photos');
+        }
+
+        // QUẢN LÝ THƯ VIỆN ẢNH (PHOTOS)
+        function renderPhotosGrid() {
+            const container = document.getElementById("photos-container");
+            container.innerHTML = "";
+            
+            if (photos.length === 0) {
+                container.innerHTML = `<div class="no-photos">Không có ảnh hoặc video<br><span style="font-size:12px; opacity:0.5; margin-top:5px; display:block;">Ảnh bạn chụp từ Camera sẽ xuất hiện tại đây</span></div>`;
+                return;
+            }
+
+            photos.forEach((photoUrl, index) => {
+                const item = document.createElement("div");
+                item.className = "photo-item";
+                item.style.backgroundImage = `url(${photoUrl})`;
+                item.onclick = () => openLightbox(index);
+                container.appendChild(item);
+            });
+        }
+
+        function openLightbox(index) {
+            selectedPhotoIndex = index;
+            const lightbox = document.getElementById("lightbox");
+            const lightboxImg = document.getElementById("lightbox-img");
+            lightboxImg.style.backgroundImage = `url(${photos[index]})`;
+            lightbox.classList.add("active");
+        }
+
+        function closeLightbox() {
+            document.getElementById("lightbox").classList.remove("active");
+            selectedPhotoIndex = null;
+        }
+
+        function deleteCurrentPhoto() {
+            if (selectedPhotoIndex !== null) {
+                if (confirm("Bạn có chắc chắn muốn xóa vĩnh viễn bức ảnh này khỏi bộ nhớ máy?")) {
+                    photos.splice(selectedPhotoIndex, 1);
+                    localStorage.setItem("tuan_iphone_photos", JSON.stringify(photos));
+                    closeLightbox();
+                    renderPhotosGrid();
+                }
+            }
+        }
+    </script>
+</body>
+</html>
